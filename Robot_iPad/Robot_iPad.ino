@@ -11,6 +11,11 @@
 
 #define FULL_TURN_DELAY 725
 
+#define HEADER_NECK 0
+#define HEADER_WHEELS 1
+
+#define LF 10
+
 AF_DCMotor motorR(2);
 AF_DCMotor motorL(1);
 Servo neck;
@@ -33,7 +38,6 @@ void setup() {
 }
 
 void loop() {
-//  delay(1000);
   int eyes = analogRead(EYES_PIN);
   Serial.write(byte(map(eyes,0,1024,-128,127)));
 }
@@ -363,8 +367,30 @@ int serial_read(int *jx, int *jy,
   */
 }
 
+  byte buf[8];
+  int cnt = 0;
+
 void serialEvent() {
   while(Serial.available()) {
-    moveNeckByTilt(map(Serial.read(),0,127,-200,200));
+    byte temp = Serial.read();
+    buf[cnt++] = temp;
+    if(temp == LF) {
+      break;
+    }
+  }
+  if(buf[cnt-1] == LF) { 
+  
+    byte header = buf[0];
+    switch(header) {
+      case HEADER_NECK:
+        moveNeckByTilt(map(buf[1],0,127,-200,200));
+        break;
+      case HEADER_WHEELS:
+        byte x = buf[1], y = buf[2];
+        setSpeedByJoystick(map(x,0,255,-128,127),map(y,0,255,-128,127));
+        break;
+    }
+    
+    cnt = 0;
   }
 }

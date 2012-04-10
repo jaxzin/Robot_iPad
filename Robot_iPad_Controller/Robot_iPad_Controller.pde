@@ -13,7 +13,13 @@ int [] led = new int [2];    //  Array allows us to add more toggle buttons in T
 int currentPos = 0;
 int desiredPos = 0;
 
-int lf = 10;      // ASCII linefeed 
+int joystickX = 0;
+int joystickY = 0;
+
+byte lf = 10;      // ASCII linefeed 
+
+byte HEADER_NECK = 0;
+byte HEADER_WHEELS = 1;
 
 void setup() {
   size(100,100);        // Processing screen size
@@ -32,8 +38,19 @@ void oscEvent(OscMessage theOscMessage) {   //  This runs whenever there is a ne
       //int i = int((addr.charAt(9) )) - 0x30;   // returns the ASCII number so convert into a real number by subtracting 0x30
       desiredPos  = int(theOscMessage.get(0).floatValue());     //  Puts button value into led[i]
     // Button values can be read by using led[0], led[1], led[2], etc.
-     arduinoPort.write(byte(map(desiredPos,0,180,0,127)));
-     println("Moving to " + desiredPos);
+      arduinoPort.write(HEADER_NECK);
+      arduinoPort.write(byte(map(desiredPos,0,180,0,127)));
+      arduinoPort.write(lf);
+      println("Moving to " + desiredPos);
+    }
+    else if(addr.indexOf("/1/joystick") !=-1){   // Filters out any toggle buttons
+      joystickX = int(theOscMessage.get(0).floatValue());
+      joystickY = int(theOscMessage.get(1).floatValue());
+      println("Joystick: "+joystickX +"," + joystickY);
+      arduinoPort.write(HEADER_WHEELS);
+      arduinoPort.write(byte(joystickX));
+      arduinoPort.write(byte(joystickY));
+      arduinoPort.write(lf);
     }
 }
 
@@ -57,7 +74,6 @@ void draw() {
 void serialEvent(Serial p) {
   int ir = p.read();
   oscP5.send(new OscMessage("/1/ir_value", new Object[]{"" + ir}), myNetAddressList);
-  println("sent ir: " + ir);
 }
 
 void connect(String theIPaddress) {
