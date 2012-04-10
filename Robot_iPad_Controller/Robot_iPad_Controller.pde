@@ -4,6 +4,9 @@ import processing.serial.*;    //  Load serial library
 
 Serial arduinoPort;        //  Set arduinoPort as serial connection
 OscP5 oscP5;            //  Set oscP5 as OSC connection
+NetAddressList myNetAddressList = new NetAddressList();
+int outgoingPort = 9000;
+int incomingPort = 8000;
 
 int redLED = 0;        //  redLED lets us know if the LED is on or off
 int [] led = new int [2];    //  Array allows us to add more toggle buttons in TouchOSC
@@ -17,30 +20,33 @@ void setup() {
   noStroke();            //  We don’t want an outline or Stroke on our graphics
     oscP5 = new OscP5(this,8000);  // Start oscP5, listening for incoming messages at port 8000
    arduinoPort = new Serial(this, Serial.list()[0], 9600);    // Set arduino to 9600 baud
-   arduinoPort.bufferUntil(lf); // Buffer serial data from arduino until a line-feed is read. 
+//   arduinoPort.bufferUntil(); // Buffer serial data from arduino until a line-feed is read. 
 }
 
 void oscEvent(OscMessage theOscMessage) {   //  This runs whenever there is a new OSC message
+
+    connect(theOscMessage.netAddress().address());
 
     String addr = theOscMessage.addrPattern();  //  Creates a string out of the OSC message
     if(addr.indexOf("/1/neck") !=-1){   // Filters out any toggle buttons
       //int i = int((addr.charAt(9) )) - 0x30;   // returns the ASCII number so convert into a real number by subtracting 0x30
       desiredPos  = int(theOscMessage.get(0).floatValue());     //  Puts button value into led[i]
     // Button values can be read by using led[0], led[1], led[2], etc.
-     
+     arduinoPort.write(byte(map(desiredPos,0,180,0,127)));
+     println("Moving to " + desiredPos);
     }
 }
 
 void draw() {
  background(50);        // Sets the background to a dark grey, can be 0-255
 
-  if(currentPos != desiredPos) {
-    String pos = str(desiredPos);
-    println("Moving to position " + pos);
-    arduinoPort.write(pos);
-    arduinoPort.write('.');
-    currentPos = desiredPos;
-  }
+//  if(currentPos != desiredPos) {
+//    String pos = str(desiredPos);
+//    println("Moving to position " + pos);
+//    arduinoPort.write(pos);
+//    arduinoPort.write('.');
+//    currentPos = desiredPos;
+//  }
 
   redLED = int(map(desiredPos, 0, 180, 0, 255));
   fill(redLED,0,0);            // Fill rectangle with redLED amount
@@ -49,11 +55,14 @@ void draw() {
 }
 
 void serialEvent(Serial p) {
-  if(p.read() == 0) {
-    p.read(); // line end
-    p.write(byte(map(desiredPos, 0, 180, 0, 127)));
-  } else {
-    // noop for now
+  int ir = p.read();
+  oscP5.send(new OscMessage("/1/ir_value", new Object[]{"" + ir}), myNetAddressList);
+  println("sent ir: " + ir);
+}
+
+void connect(String theIPaddress) {
+  if (!myNetAddressList.contains(theIPaddress, outgoingPort)) {
+       myNetAddressList.add(new NetAddress(theIPaddress, outgoingPort));
   }
 }
 

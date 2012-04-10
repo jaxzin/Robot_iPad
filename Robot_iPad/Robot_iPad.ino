@@ -33,6 +33,12 @@ void setup() {
 }
 
 void loop() {
+//  delay(1000);
+  int eyes = analogRead(EYES_PIN);
+  Serial.write(byte(map(eyes,0,1024,-128,127)));
+}
+
+void loopOld() {
 
   if(!autonomousMode) {
     // In this mode, the joystick controls the wheels, tilt controls the 'neck' and the Z trigger switches to autonomous mode
@@ -110,19 +116,19 @@ void setSpeedByJoystick(int jx, int jy) {
   // convert x/y to polar
   double r = polarR(jx, jy);
   double theta = polarTheta(jx, jy);
-  Serial.print("r: ");
-  Serial.print(r);
-  Serial.print("\ttheta: ");
-  Serial.print(theta);
+//  Serial.print("r: ");
+//  Serial.print(r);
+//  Serial.print("\ttheta: ");
+//  Serial.print(theta);
   
   
   // convert polar into left/right wheel speeds
   int left = polarToLeftWheel(r, theta);
   int right = polarToRightWheel(r, theta);
-  Serial.print("\tleft: ");
-  Serial.print(left);
-  Serial.print("\tright: ");
-  Serial.println(right);
+//  Serial.print("\tleft: ");
+//  Serial.print(left);
+//  Serial.print("\tright: ");
+//  Serial.println(right);
   
   motorL.run(left == 0 ? BRAKE : left > 0 ? FORWARD : BACKWARD);
   motorR.run(right == 0? BRAKE : right > 0? FORWARD : BACKWARD);
@@ -326,12 +332,12 @@ int serial_read(int *jx, int *jy,
                  int *bz, int *bc) {
   Serial.write(byte(0)); // Request data
   Serial.write(byte(10)); // End of request
-  Serial.flush();
-  delayMicroseconds(200); // Give nunchuk time to respond.
+//  Serial.flush();
+//  delayMicroseconds(200); // Give nunchuk time to respond.
   byte buf[8];  // Allocate a few extra bytes just in case.
   int cnt = 0;
   while (Serial.available()) {
-    buf[cnt++] = (Serial.read() ^ 0x17) + 0x17;
+    buf[cnt++] = Serial.read();//(Serial.read() ^ 0x17) + 0x17;
   }
   if (cnt < 6) {
     return 0;
@@ -355,4 +361,10 @@ int serial_read(int *jx, int *jy,
   *bc = ((b >> 1) & 1) ^ 1;
   return 1;
   */
+}
+
+void serialEvent() {
+  while(Serial.available()) {
+    moveNeckByTilt(map(Serial.read(),0,127,-200,200));
+  }
 }
