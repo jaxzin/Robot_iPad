@@ -39,7 +39,9 @@ void setup() {
 
 void loop() {
   int eyes = analogRead(EYES_PIN);
-  Serial.write(byte(map(eyes,0,1024,-128,127)));
+  Serial.println(eyes, DEC);
+//  Serial.write(byte(eyes));
+//  Serial.write(byte(eyes << 8));
 }
 
 void loopOld() {

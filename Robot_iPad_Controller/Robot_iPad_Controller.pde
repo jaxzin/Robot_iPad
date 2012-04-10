@@ -24,9 +24,14 @@ byte HEADER_WHEELS = 1;
 void setup() {
   size(100,100);        // Processing screen size
   noStroke();            //  We don’t want an outline or Stroke on our graphics
-    oscP5 = new OscP5(this,8000);  // Start oscP5, listening for incoming messages at port 8000
-   arduinoPort = new Serial(this, Serial.list()[0], 9600);    // Set arduino to 9600 baud
-//   arduinoPort.bufferUntil(); // Buffer serial data from arduino until a line-feed is read. 
+  oscP5 = new OscP5(this,8000);  // Start oscP5, listening for incoming messages at port 8000
+  arduinoPort = new Serial(this, Serial.list()[0], 9600);    // Set arduino to 9600 baud
+  arduinoPort.bufferUntil(lf); // Buffer serial data from arduino until a line-feed is read.
+  arduinoPort.clear();
+  // Throw out the first reading, in case we started reading 
+  // in the middle of a string from the sender. 
+  arduinoPort.readStringUntil(lf); 
+  
 }
 
 void oscEvent(OscMessage theOscMessage) {   //  This runs whenever there is a new OSC message
@@ -72,8 +77,8 @@ void draw() {
 }
 
 void serialEvent(Serial p) {
-  int ir = p.read();
-  oscP5.send(new OscMessage("/1/ir_value", new Object[]{"" + ir}), myNetAddressList);
+  String ir = p.readStringUntil(lf);
+  oscP5.send(new OscMessage("/1/ir_value", new Object[]{ir}), myNetAddressList);
 }
 
 void connect(String theIPaddress) {
