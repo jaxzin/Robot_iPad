@@ -1,4 +1,3 @@
-#include <nunchuk.h>
 #include <Wire.h>
 #include <AFMotor.h>
 #include <Servo.h> 
@@ -20,8 +19,6 @@ boolean autonomousMode = false;
 
 void setup() {
   
-  Serial.begin(9600);
-
   // turn on motor
   motorR.setSpeed(200);
   motorL.setSpeed(200);
@@ -32,7 +29,7 @@ void setup() {
   neck.attach(NECK_PIN);
   neck.write(90);
 
-  nunchuk_init();
+  serial_init();
 }
 
 void loop() {
@@ -41,7 +38,7 @@ void loop() {
     // In this mode, the joystick controls the wheels, tilt controls the 'neck' and the Z trigger switches to autonomous mode
   
     int jx, jy, ax, ay, az, bz, bc;
-    if (nunchuk_read(&jx, &jy, &ax, &ay, &az, &bz, &bc)) {
+    if (serial_read(&jx, &jy, &ax, &ay, &az, &bz, &bc)) {
     
       // translate the joystick into a speed
       setSpeedByJoystick(jx, jy);
@@ -308,4 +305,54 @@ void turn(uint8_t direction, uint8_t degrees) {
 double mapd(double x, double in_min, double in_max, double out_min, double out_max)
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+// ============ Serial functions ==============
+void serial_init() {
+  Serial.begin(9600);
+}
+
+/*
+ * Reads the current values from the Serial port as 6 bytes.
+ *
+ * jx/y:   Joystick, ranging from -128 to 127
+ * ax/y/z: Acceleration, ranging from -512 to 511
+ * bz/c:   Buttons; 1 means pressed, 0 means released
+ *
+ * Returns 1 on success, 0 on failure.
+ */
+int serial_read(int *jx, int *jy,
+                 int *ax, int *ay, int *az,
+                 int *bz, int *bc) {
+  Serial.write(byte(0)); // Request data
+  Serial.write(byte(10)); // End of request
+  Serial.flush();
+  delayMicroseconds(200); // Give nunchuk time to respond.
+  byte buf[8];  // Allocate a few extra bytes just in case.
+  int cnt = 0;
+  while (Serial.available()) {
+    buf[cnt++] = (Serial.read() ^ 0x17) + 0x17;
+  }
+  if (cnt < 6) {
+    return 0;
+  }
+  
+  *jx = 0;//buf[0] - 128;
+  *jy = 0;//buf[1] - 128;
+  *ax = buf[0];
+  *ay = 0;
+  *az = 0;
+  *bz = 0;
+  *bc = 0;
+  return 1;
+  
+  /*
+  byte b = buf[5];
+  *ax = ((buf[2] << 2) | ((b >> 2) & 3)) - 512;
+  *ay = ((buf[3] << 2) | ((b >> 4) & 3)) - 512;
+  *az = ((buf[4] << 2) | ((b >> 6) & 3)) - 512;
+  *bz = (b & 1) ^ 1;
+  *bc = ((b >> 1) & 1) ^ 1;
+  return 1;
+  */
 }
