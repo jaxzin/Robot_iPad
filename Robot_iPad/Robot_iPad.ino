@@ -20,8 +20,6 @@ AF_DCMotor motorR(2);
 AF_DCMotor motorL(1);
 Servo neck;
 
-boolean autonomousMode = false;
-
 void setup() {
   
   // turn on motor
@@ -40,72 +38,6 @@ void setup() {
 void loop() {
   int eyes = analogRead(EYES_PIN);
   Serial.println(eyes, DEC);
-//  Serial.write(byte(eyes));
-//  Serial.write(byte(eyes << 8));
-}
-
-void loopOld() {
-
-  if(!autonomousMode) {
-    // In this mode, the joystick controls the wheels, tilt controls the 'neck' and the Z trigger switches to autonomous mode
-  
-    int jx, jy, ax, ay, az, bz, bc;
-    if (serial_read(&jx, &jy, &ax, &ay, &az, &bz, &bc)) {
-    
-      // translate the joystick into a speed
-      setSpeedByJoystick(jx, jy);
-    
-      // translate accelerometer into neck movement
-      moveNeckByTilt(ax);
-
-      // If the operator hits the 'Z' trigger, switch to autonomous mode
-      if(bz == 1) {
-        autonomousMode = true;
-        
-        // prepare robot for autonomous mode
-        // stop the wheels
-        stop();
-        // face 'eyes' forward
-        neck.write(90);
-      }
-    }
-    delay(100);
-  
-  } else {
-  
-    // move forward until we are close to something
-    Serial.println("Full speed ahead!");
-    move(FORWARD, 255);
-    while(analogRead(EYES_PIN) < 500) {
-      ; // just keep moving
-    }
-    stop();
-  
-    // look around for clear path
-    int path = searchForClearPath();
-    Serial.print("Found clear path at ");
-    Serial.println(path);
-    
-    // if a clear path is found
-      //   then turn to the clear path
-    if(path > -90 && path < 0) {
-      Serial.print("Turning left by ");
-      Serial.println(-path);
-      turn(LEFT, -path);
-    } else if (path > 0 && path < 90) {
-      Serial.print("Turning right by ");
-      Serial.println(path);
-      turn(RIGHT, path);
-    } else {
-      //   else turn 180
-      Serial.println("Turning around.");
-      turn(LEFT, 180);
-    }
-    
-    motorR.run(RELEASE);
-    motorL.run(RELEASE);
-    delay(1000);
-  }
 }
 
 // Translates nunchuck tilt into neck/eye position
@@ -322,51 +254,6 @@ double mapd(double x, double in_min, double in_max, double out_min, double out_m
 // ============ Serial functions ==============
 void serial_init() {
   Serial.begin(9600);
-}
-
-/*
- * Reads the current values from the Serial port as 6 bytes.
- *
- * jx/y:   Joystick, ranging from -128 to 127
- * ax/y/z: Acceleration, ranging from -512 to 511
- * bz/c:   Buttons; 1 means pressed, 0 means released
- *
- * Returns 1 on success, 0 on failure.
- */
-int serial_read(int *jx, int *jy,
-                 int *ax, int *ay, int *az,
-                 int *bz, int *bc) {
-  Serial.write(byte(0)); // Request data
-  Serial.write(byte(10)); // End of request
-//  Serial.flush();
-//  delayMicroseconds(200); // Give nunchuk time to respond.
-  byte buf[8];  // Allocate a few extra bytes just in case.
-  int cnt = 0;
-  while (Serial.available()) {
-    buf[cnt++] = Serial.read();//(Serial.read() ^ 0x17) + 0x17;
-  }
-  if (cnt < 6) {
-    return 0;
-  }
-  
-  *jx = 0;//buf[0] - 128;
-  *jy = 0;//buf[1] - 128;
-  *ax = buf[0];
-  *ay = 0;
-  *az = 0;
-  *bz = 0;
-  *bc = 0;
-  return 1;
-  
-  /*
-  byte b = buf[5];
-  *ax = ((buf[2] << 2) | ((b >> 2) & 3)) - 512;
-  *ay = ((buf[3] << 2) | ((b >> 4) & 3)) - 512;
-  *az = ((buf[4] << 2) | ((b >> 6) & 3)) - 512;
-  *bz = (b & 1) ^ 1;
-  *bc = ((b >> 1) & 1) ^ 1;
-  return 1;
-  */
 }
 
   byte buf[8];
