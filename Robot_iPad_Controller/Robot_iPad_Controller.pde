@@ -49,12 +49,13 @@ void oscEvent(OscMessage theOscMessage) {   //  This runs whenever there is a ne
       println("Moving to " + desiredPos);
     }
     else if(addr.indexOf("/1/joystick") !=-1){   // Filters out any toggle buttons
+      boolean swapXY = addr.indexOf("H") != -1; // iPad layout is horizontal and we can't rotate the layout so swap X/Y values
       joystickX = int(theOscMessage.get(0).floatValue());
       joystickY = int(theOscMessage.get(1).floatValue());
       println("Joystick: "+joystickX +"," + joystickY);
       arduinoPort.write(HEADER_WHEELS);
-      arduinoPort.write(byte(joystickX));
-      arduinoPort.write(byte(joystickY));
+      arduinoPort.write(byte(swapXY ? joystickY : joystickX));
+      arduinoPort.write(byte(swapXY ? joystickX : joystickY));
       arduinoPort.write(lf);
     }
 }
