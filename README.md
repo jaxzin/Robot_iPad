@@ -7,7 +7,7 @@ Requirements
 -------
 To use this project you'll need the following:
 
-* [Arduino](http://arduino.cc), A development environment for the Arduino microprocessor, you'll use this to install the serial --> servo sketch on your Arduino.
+* [Arduino](http://arduino.cc), A development environment for the Arduino microprocessor, you'll use this to install the serial --> robot sketch on your Arduino.
 * An iOS device.
 * [TouchOSC](http://hexler.net/software/touchosc) on your iOS device and also the layout editor on your computer.
 * [Processing](http://processing.org/), A programming environment for compiling and running the intermediary OSC --> Serial controller app.
