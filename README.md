@@ -13,7 +13,7 @@ To use this project you'll need the following:
 * [Processing](http://processing.org/), A programming environment for compiling and running the intermediary OSC --> Serial controller app.
 * A standard servo connected to pin 9 of your Arduino.
 * A [LadyAda Motor shield](http://www.ladyada.net/make/mshield/)
-* The motors, wheels and IR range sensor from [Let's Make Robots Starter project](http://letsmakerobots.com/start)
+* The motors, wheels and [IR range sensor](http://www.societyofrobots.com/sensors_sharpirrange.shtml) from [Let's Make Robots Starter project](http://letsmakerobots.com/start)
 
 Usage
 --------
