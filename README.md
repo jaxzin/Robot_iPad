@@ -15,7 +15,7 @@ To use this project you'll need the following:
 
 Usage
 --------
-See [this video for a demonstration of the built robot](http://www.youtube.com/watch?v=iV2AneMOBz4).
+See [this video for a demonstration of the built robot](https://www.youtube.com/watch?v=BKMHeAAhr94).
 
 Credit
 ---------
